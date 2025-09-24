@@ -4,6 +4,7 @@ import Clock from "react-live-clock";
 import Forcast from "./forcast";
 import loader from "./images/WeatherIcons.gif";
 import ReactAnimatedWeather from "react-animated-weather";
+import ClothingRecommendation from "./ClothingRecommendation";
 const dateBuilder = (d) => {
   let months = [
     "January",
@@ -56,11 +57,15 @@ class Weather extends React.Component {
     sunrise: undefined,
     sunset: undefined,
     errorMsg: undefined,
+    showClothingRecommendation: false,
   };
 
   handleGetClothingAdvice = () => {
-    // Placeholder for clothing advice functionality
-    console.log('Get Clothing Advice clicked');
+    this.setState({ showClothingRecommendation: true });
+  };
+
+  handleCloseRecommendation = () => {
+    this.setState({ showClothingRecommendation: false });
   };
 
   componentDidMount() {
@@ -119,6 +124,7 @@ class Weather extends React.Component {
       temperatureF: Math.round(data.main.temp * 1.8 + 32),
       humidity: data.main.humidity,
       main: data.weather[0].main,
+      description: data.weather[0].description,
       country: data.sys.country,
       // sunrise: this.getTimeFromUnixTimeStamp(data.sys.sunrise),
 
@@ -203,6 +209,18 @@ class Weather extends React.Component {
             </div>
           </div>
           <Forcast icon={this.state.icon} weather={this.state.main} />
+          <ClothingRecommendation
+            isVisible={this.state.showClothingRecommendation}
+            weatherData={{
+              temperatureC: this.state.temperatureC,
+              main: this.state.main,
+              description: this.state.description,
+              humidity: this.state.humidity,
+              city: this.state.city,
+              country: this.state.country
+            }}
+            onClose={this.handleCloseRecommendation}
+          />
         </React.Fragment>
       );
     } else {

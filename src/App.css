@@ -748,3 +748,224 @@ div#txt {
   outline: 2px solid #fff;
   outline-offset: 2px;
 }
+
+/* Clothing Recommendation Modal */
+.clothing-recommendation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.clothing-recommendation-modal {
+  background: white;
+  border-radius: 15px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border-bottom: 1px solid #eee;
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  border-radius: 15px 15px 0 0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 30px;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.weather-summary {
+  padding: 20px 25px;
+  background: #f8f9fa;
+  text-align: center;
+}
+
+.weather-summary h4 {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.weather-summary p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.recommendations-content {
+  padding: 25px;
+}
+
+.recommendation-section {
+  margin-bottom: 20px;
+}
+
+.recommendation-section h5 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recommendation-section ul {
+  margin: 0;
+  padding-left: 20px;
+  list-style-type: disc;
+}
+
+.recommendation-section li {
+  margin-bottom: 6px;
+  color: #555;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.recommendation-section p {
+  margin: 0;
+  color: #555;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.recommendation-tip {
+  background: #e8f5e8;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #4CAF50;
+  margin-top: 20px;
+}
+
+.recommendation-tip h5 {
+  margin: 0 0 8px 0;
+  color: #2e7d32;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.recommendation-tip p {
+  margin: 0;
+  color: #2e7d32;
+  font-size: 14px;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+.modal-footer {
+  padding: 20px 25px;
+  border-top: 1px solid #eee;
+  text-align: center;
+}
+
+.got-it-btn {
+  background: linear-gradient(to right, #4CAF50, #45a049);
+  border: none;
+  color: white;
+  padding: 12px 30px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 25px;
+  cursor: pointer;
+  font-family: "Open Sans", sans-serif;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.got-it-btn:hover {
+  background: linear-gradient(to right, #45a049, #4CAF50);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.got-it-btn:active {
+  transform: translateY(0);
+}
+
+/* Mobile responsive */
+@media screen and (max-width: 480px) {
+  .clothing-recommendation-modal {
+    width: 95%;
+    max-height: 85vh;
+  }
+
+  .modal-header {
+    padding: 15px 20px;
+  }
+
+  .modal-header h3 {
+    font-size: 20px;
+  }
+
+  .weather-summary {
+    padding: 15px 20px;
+  }
+
+  .recommendations-content {
+    padding: 20px;
+  }
+
+  .modal-footer {
+    padding: 15px 20px;
+  }
+
+  .got-it-btn {
+    padding: 10px 25px;
+    font-size: 14px;
+  }
+}
