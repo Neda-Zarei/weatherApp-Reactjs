@@ -937,6 +937,105 @@ div#txt {
   transform: translateY(0);
 }
 
+/* Loading State */
+.loading-state {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.spinner {
+  border: 3px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 3px solid #4CAF50;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  color: #666;
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Error State */
+.error-state {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.error-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.error-state h4 {
+  color: #d32f2f;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+}
+
+.error-state p {
+  color: #666;
+  font-size: 14px;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+.retry-btn {
+  background: linear-gradient(to right, #ff6b6b, #ee5a52);
+  border: none;
+  color: white;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: "Open Sans", sans-serif;
+}
+
+.retry-btn:hover {
+  background: linear-gradient(to right, #ee5a52, #ff6b6b);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(238, 90, 82, 0.3);
+}
+
+/* Notice Styles */
+.ai-notice,
+.fallback-notice {
+  text-align: center;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ai-notice {
+  background: linear-gradient(135deg, #e8f5e8, #f1f8f1);
+  border: 1px solid #4CAF50;
+  color: #2e7d32;
+}
+
+.fallback-notice {
+  background: linear-gradient(135deg, #fff3e0, #fef7ed);
+  border: 1px solid #ff9800;
+  color: #f57c00;
+}
+
+.ai-notice p,
+.fallback-notice p {
+  margin: 0;
+}
+
 /* Mobile responsive */
 @media screen and (max-width: 480px) {
   .clothing-recommendation-modal {
@@ -967,5 +1066,25 @@ div#txt {
   .got-it-btn {
     padding: 10px 25px;
     font-size: 14px;
+  }
+
+  .loading-state,
+  .error-state {
+    padding: 30px 15px;
+  }
+
+  .spinner {
+    width: 35px;
+    height: 35px;
+  }
+
+  .error-state h4 {
+    font-size: 18px;
+  }
+
+  .ai-notice,
+  .fallback-notice {
+    font-size: 12px;
+    padding: 10px 15px;
   }
 }

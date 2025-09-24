@@ -1,6 +1,81 @@
 import React from 'react';
+const openaiService = require('./services/openaiService');
 
 class ClothingRecommendation extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      loading: false,
+      error: null,
+      recommendations: null
+    };
+  }
+
+  componentDidMount() {
+    document.addEventListener('keydown', this.handleEscapeKey);
+    if (this.props.isVisible) {
+      this.disableBackgroundScroll();
+      this.fetchRecommendations();
+    }
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.isVisible !== prevProps.isVisible) {
+      if (this.props.isVisible) {
+        this.disableBackgroundScroll();
+        this.fetchRecommendations();
+      } else {
+        this.enableBackgroundScroll();
+      }
+    }
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('keydown', this.handleEscapeKey);
+    this.enableBackgroundScroll();
+  }
+
+  disableBackgroundScroll = () => {
+    document.body.style.overflow = 'hidden';
+  };
+
+  enableBackgroundScroll = () => {
+    document.body.style.overflow = 'unset';
+  };
+
+  handleEscapeKey = (e) => {
+    if (e.key === 'Escape' && this.props.isVisible) {
+      this.props.onClose();
+    }
+  };
+
+  fetchRecommendations = async () => {
+    this.setState({ loading: true, error: null });
+
+    try {
+      const weatherData = {
+        temperature: this.props.weatherData.temperatureC,
+        description: this.props.weatherData.main || this.props.weatherData.description,
+        humidity: this.props.weatherData.humidity || 50,
+        location: `${this.props.weatherData.city}, ${this.props.weatherData.country}`
+      };
+
+      const recommendations = await openaiService.getClothingRecommendations(weatherData);
+      this.setState({ recommendations, loading: false });
+    } catch (error) {
+      console.error('Failed to fetch recommendations:', error);
+      this.setState({
+        error: 'Failed to get clothing recommendations. Please try again.',
+        loading: false,
+        recommendations: this.getFallbackRecommendations()
+      });
+    }
+  };
+
+  retryRecommendations = () => {
+    this.fetchRecommendations();
+  };
+
   getTemperatureRange = (temp) => {
     if (temp < 0) return 'freezing';
     if (temp < 10) return 'cold';
@@ -10,14 +85,14 @@ class ClothingRecommendation extends React.Component {
     return 'hot';
   };
 
-  getClothingRecommendations = () => {
+  getFallbackRecommendations = () => {
     const { temperatureC, main, humidity } = this.props.weatherData;
     const tempRange = this.getTemperatureRange(temperatureC);
     const weatherCondition = main ? main.toLowerCase() : '';
 
     let recommendations = {
       essentials: [],
-      footwear: '',
+      footwear: [],
       accessories: [],
       tip: ''
     };
@@ -26,54 +101,54 @@ class ClothingRecommendation extends React.Component {
     switch (tempRange) {
       case 'freezing':
         recommendations.essentials = ['Heavy winter coat', 'Thermal underwear', 'Warm sweater', 'Insulated pants'];
-        recommendations.footwear = 'Insulated winter boots';
+        recommendations.footwear = ['Insulated winter boots'];
         recommendations.accessories = ['Warm hat', 'Insulated gloves', 'Scarf'];
         recommendations.tip = 'Layer up and cover exposed skin to prevent frostbite';
         break;
       case 'cold':
         recommendations.essentials = ['Warm jacket', 'Long-sleeve shirt', 'Jeans or warm pants'];
-        recommendations.footwear = 'Closed-toe shoes or boots';
+        recommendations.footwear = ['Closed-toe shoes or boots'];
         recommendations.accessories = ['Light hat', 'Gloves'];
         recommendations.tip = 'Layers are key - you can remove them as you warm up';
         break;
       case 'cool':
         recommendations.essentials = ['Light jacket or cardigan', 'Long-sleeve shirt', 'Comfortable pants'];
-        recommendations.footwear = 'Comfortable walking shoes';
+        recommendations.footwear = ['Comfortable walking shoes'];
         recommendations.accessories = [];
         recommendations.tip = 'Perfect weather for layering - bring a light jacket';
         break;
       case 'mild':
         recommendations.essentials = ['Light shirt or t-shirt', 'Comfortable pants or shorts'];
-        recommendations.footwear = 'Sneakers or comfortable shoes';
+        recommendations.footwear = ['Sneakers or comfortable shoes'];
         recommendations.accessories = ['Sunglasses'];
         recommendations.tip = 'Great weather for outdoor activities';
         break;
       case 'warm':
         recommendations.essentials = ['Light t-shirt', 'Shorts or light pants'];
-        recommendations.footwear = 'Breathable shoes or sandals';
+        recommendations.footwear = ['Breathable shoes or sandals'];
         recommendations.accessories = ['Sunglasses', 'Light hat'];
         recommendations.tip = 'Stay cool and hydrated';
         break;
       case 'hot':
         recommendations.essentials = ['Lightweight breathable shirt', 'Shorts', 'Tank top (optional)'];
-        recommendations.footwear = 'Breathable sandals or lightweight shoes';
+        recommendations.footwear = ['Breathable sandals or lightweight shoes'];
         recommendations.accessories = ['Sun hat', 'Sunglasses', 'Sunscreen'];
         recommendations.tip = 'Stay hydrated and seek shade during peak sun hours';
         break;
       default:
         recommendations.essentials = ['Comfortable clothing'];
-        recommendations.footwear = 'Comfortable shoes';
+        recommendations.footwear = ['Comfortable shoes'];
         recommendations.tip = 'Dress comfortably for the weather';
     }
 
     // Weather-specific modifications
     if (weatherCondition.includes('rain') || weatherCondition.includes('drizzle')) {
       recommendations.accessories = [...recommendations.accessories, 'Umbrella', 'Rain jacket'];
-      recommendations.footwear = 'Waterproof shoes or boots';
+      recommendations.footwear = ['Waterproof shoes or boots'];
       recommendations.tip = 'Stay dry and watch for slippery surfaces';
     } else if (weatherCondition.includes('snow')) {
       recommendations.accessories = [...recommendations.accessories.filter(item => !item.includes('hat')), 'Warm hat', 'Waterproof gloves'];
-      recommendations.footwear = 'Waterproof winter boots with good traction';
+      recommendations.footwear = ['Waterproof winter boots with good traction'];
       recommendations.tip = 'Dress in layers and watch for icy conditions';
     } else if (weatherCondition.includes('wind')) {
       if (!recommendations.essentials.some(item => item.includes('jacket'))) {
@@ -90,11 +165,98 @@ class ClothingRecommendation extends React.Component {
     return recommendations;
   };
 
+  renderLoadingState() {
+    return (
+      <div className="recommendations-content">
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Getting personalized clothing recommendations...</p>
+        </div>
+      </div>
+    );
+  }
+
+  renderErrorState() {
+    return (
+      <div className="recommendations-content">
+        <div className="error-state">
+          <div className="error-icon">⚠️</div>
+          <h4>Oops! Something went wrong</h4>
+          <p>{this.state.error}</p>
+          <button className="retry-btn" onClick={this.retryRecommendations}>
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  renderRecommendations() {
+    const recommendations = this.state.recommendations;
+    if (!recommendations) return null;
+
+    return (
+      <div className="recommendations-content">
+        {this.state.error && !recommendations.fallback && (
+          <div className="ai-notice">
+            <p>🤖 Using AI-powered recommendations</p>
+          </div>
+        )}
+
+        {recommendations.fallback && (
+          <div className="fallback-notice">
+            <p>⚡ Using quick recommendations (AI service unavailable)</p>
+          </div>
+        )}
+
+        <div className="recommendation-section">
+          <h5>👕 Essential Clothing:</h5>
+          <ul>
+            {recommendations.essentials.map((item, index) => (
+              <li key={index}>{item}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="recommendation-section">
+          <h5>👟 Footwear:</h5>
+          {Array.isArray(recommendations.footwear) ? (
+            <ul>
+              {recommendations.footwear.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>{recommendations.footwear}</p>
+          )}
+        </div>
+
+        {recommendations.accessories && recommendations.accessories.length > 0 && (
+          <div className="recommendation-section">
+            <h5>🎒 Accessories:</h5>
+            <ul>
+              {recommendations.accessories.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {recommendations.tip && (
+          <div className="recommendation-tip">
+            <h5>💡 Tip:</h5>
+            <p>{recommendations.tip}</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   render() {
     if (!this.props.isVisible) return null;
 
-    const recommendations = this.getClothingRecommendations();
     const { temperatureC, city, main } = this.props.weatherData;
+    const { loading, error, recommendations } = this.state;
 
     return (
       <div className="clothing-recommendation-overlay" onClick={this.props.onClose}>
@@ -111,39 +273,9 @@ class ClothingRecommendation extends React.Component {
             <p>Current conditions: {main}</p>
           </div>
 
-          <div className="recommendations-content">
-            <div className="recommendation-section">
-              <h5>👕 Essential Clothing:</h5>
-              <ul>
-                {recommendations.essentials.map((item, index) => (
-                  <li key={index}>{item}</li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="recommendation-section">
-              <h5>👟 Footwear:</h5>
-              <p>{recommendations.footwear}</p>
-            </div>
-
-            {recommendations.accessories.length > 0 && (
-              <div className="recommendation-section">
-                <h5>🎒 Accessories:</h5>
-                <ul>
-                  {recommendations.accessories.map((item, index) => (
-                    <li key={index}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {recommendations.tip && (
-              <div className="recommendation-tip">
-                <h5>💡 Tip:</h5>
-                <p>{recommendations.tip}</p>
-              </div>
-            )}
-          </div>
+          {loading && this.renderLoadingState()}
+          {error && !recommendations && this.renderErrorState()}
+          {recommendations && this.renderRecommendations()}
 
           <div className="modal-footer">
             <button className="got-it-btn" onClick={this.props.onClose}>
