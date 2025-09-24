@@ -207,35 +207,110 @@ Be specific about clothing types (e.g., "cotton t-shirt" not just "shirt"). Cons
   async makeRecommendationRequest(weatherData, userPreferences, retryCount = 0) {
     const maxRetries = 3;
     const retryDelay = Math.pow(2, retryCount) * 1000; // Exponential backoff
+    const requestTimeout = 25000; // 25 second timeout per request
 
     try {
       const prompt = this.buildClothingPrompt(weatherData, userPreferences);
 
-      const completion = await this.client.chat.completions.create({
+      // Create timeout promise
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('OpenAI API request timeout')), requestTimeout)
+      );
+
+      // Create API call promise
+      const apiPromise = this.client.chat.completions.create({
         messages: [{ role: "user", content: prompt }],
         model: "gpt-3.5-turbo",
         max_tokens: 300,
-        temperature: 0.7
+        temperature: 0.7,
+        timeout: requestTimeout - 1000 // OpenAI client timeout slightly less than our timeout
       });
 
+      // Race between timeout and API call
+      const completion = await Promise.race([apiPromise, timeoutPromise]);
+
       const response = completion.choices[0]?.message?.content;
-      if (!response) {
-        throw new Error('Empty response from OpenAI API');
+      if (!response || response.trim() === '') {
+        throw new Error('Empty or invalid response from OpenAI API');
       }
 
       return this.parseClothingResponse(response);
     } catch (error) {
-      console.error(`API request failed (attempt ${retryCount + 1}):`, error.message);
+      const errorInfo = this.categorizeError(error);
+      console.error(`API request failed (attempt ${retryCount + 1}):`, errorInfo.message);
 
       if (retryCount < maxRetries && this.isRetryableError(error)) {
-        console.log(`Retrying in ${retryDelay}ms...`);
+        console.log(`Retrying in ${retryDelay}ms... (Error: ${errorInfo.type})`);
         await new Promise(resolve => setTimeout(resolve, retryDelay));
         return this.makeRecommendationRequest(weatherData, userPreferences, retryCount + 1);
       }
 
-      throw error;
+      // Enhance error with more context
+      const enhancedError = new Error(errorInfo.message);
+      enhancedError.type = errorInfo.type;
+      enhancedError.retryable = errorInfo.retryable;
+      throw enhancedError;
     }
   }
+
+  categorizeError = (error) => {
+    const message = error.message?.toLowerCase() || '';
+    const status = error.status || error.statusCode;
+
+    if (message.includes('timeout') || message.includes('timed out')) {
+      return {
+        type: 'timeout',
+        message: 'Request timed out - the service is taking too long to respond',
+        retryable: true
+      };
+    }
+
+    if (status === 429 || message.includes('rate limit')) {
+      return {
+        type: 'rate_limit',
+        message: 'Too many requests - please wait before trying again',
+        retryable: true
+      };
+    }
+
+    if (status === 401 || message.includes('unauthorized') || message.includes('invalid api key')) {
+      return {
+        type: 'authentication',
+        message: 'Authentication failed - API key issue',
+        retryable: false
+      };
+    }
+
+    if (status === 402 || message.includes('quota') || message.includes('billing')) {
+      return {
+        type: 'quota_exceeded',
+        message: 'API quota exceeded - billing limit reached',
+        retryable: false
+      };
+    }
+
+    if (status >= 500 || message.includes('server error') || message.includes('502') || message.includes('503')) {
+      return {
+        type: 'server_error',
+        message: 'Server error - service temporarily unavailable',
+        retryable: true
+      };
+    }
+
+    if (message.includes('network') || message.includes('fetch') || message.includes('connection')) {
+      return {
+        type: 'network_error',
+        message: 'Network connection issue',
+        retryable: true
+      };
+    }
+
+    return {
+      type: 'unknown',
+      message: error.message || 'Unknown error occurred',
+      retryable: false
+    };
+  };
 
   isRetryableError(error) {
     const retryableErrors = [

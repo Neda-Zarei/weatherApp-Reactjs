@@ -958,10 +958,56 @@ div#txt {
   100% { transform: rotate(360deg); }
 }
 
-.loading-state p {
+.loading-message {
   color: #666;
   font-size: 16px;
+  margin: 0 0 20px 0;
+  font-weight: 500;
+  animation: fadeInOut 3s infinite;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+.loading-progress {
+  width: 200px;
+  height: 4px;
+  background-color: #e0e0e0;
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 0 auto 15px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #45a049);
+  border-radius: 2px;
+  animation: progressAnimation 2s ease-in-out infinite;
+}
+
+@keyframes progressAnimation {
+  0% {
+    width: 20%;
+    transform: translateX(-100px);
+  }
+  50% {
+    width: 60%;
+    transform: translateX(50px);
+  }
+  100% {
+    width: 90%;
+    transform: translateX(200px);
+  }
+}
+
+.loading-subtext {
+  color: #999;
+  font-size: 12px;
   margin: 0;
+  font-style: italic;
 }
 
 /* Error State */

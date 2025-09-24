@@ -60,16 +60,58 @@ class ClothingRecommendation extends React.Component {
         location: `${this.props.weatherData.city}, ${this.props.weatherData.country}`
       };
 
-      const recommendations = await openaiService.getClothingRecommendations(weatherData);
+      // Add timeout to the API call
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timed out')), 30000) // 30 second timeout
+      );
+
+      const recommendationsPromise = openaiService.getClothingRecommendations(weatherData);
+
+      const recommendations = await Promise.race([recommendationsPromise, timeoutPromise]);
       this.setState({ recommendations, loading: false });
     } catch (error) {
       console.error('Failed to fetch recommendations:', error);
+
+      const errorMessage = this.getErrorMessage(error);
+
       this.setState({
-        error: 'Failed to get clothing recommendations. Please try again.',
+        error: errorMessage,
         loading: false,
         recommendations: this.getFallbackRecommendations()
       });
     }
+  };
+
+  getErrorMessage = (error) => {
+    const errorString = error.message?.toLowerCase() || error.toString().toLowerCase();
+
+    // Rate limit errors
+    if (errorString.includes('rate limit') || errorString.includes('429')) {
+      return 'Too many requests right now. Please wait a moment and try again.';
+    }
+
+    // Authentication errors
+    if (errorString.includes('unauthorized') || errorString.includes('401') || errorString.includes('invalid api key')) {
+      return 'Service temporarily unavailable. Using quick recommendations instead.';
+    }
+
+    // Network/timeout errors
+    if (errorString.includes('network') || errorString.includes('timeout') || errorString.includes('fetch')) {
+      return 'Connection issue detected. Using offline recommendations.';
+    }
+
+    // Quota exceeded
+    if (errorString.includes('quota') || errorString.includes('billing')) {
+      return 'AI service limit reached. Showing smart recommendations based on weather patterns.';
+    }
+
+    // Server errors
+    if (errorString.includes('500') || errorString.includes('502') || errorString.includes('503')) {
+      return 'Service temporarily down. Using weather-based recommendations.';
+    }
+
+    // Generic fallback
+    return 'Unable to get AI recommendations right now. Using smart weather-based suggestions.';
   };
 
   retryRecommendations = () => {
@@ -166,11 +208,25 @@ class ClothingRecommendation extends React.Component {
   };
 
   renderLoadingState() {
+    const loadingMessages = [
+      'Analyzing weather conditions...',
+      'Consulting AI fashion advisor...',
+      'Personalizing recommendations...',
+      'Almost ready with your outfit suggestions...'
+    ];
+
+    // Cycle through messages every 3 seconds
+    const messageIndex = Math.floor((Date.now() / 3000) % loadingMessages.length);
+
     return (
       <div className="recommendations-content">
         <div className="loading-state">
           <div className="spinner"></div>
-          <p>Getting personalized clothing recommendations...</p>
+          <p className="loading-message">{loadingMessages[messageIndex]}</p>
+          <div className="loading-progress">
+            <div className="progress-bar"></div>
+          </div>
+          <p className="loading-subtext">This usually takes just a few seconds</p>
         </div>
       </div>
     );
