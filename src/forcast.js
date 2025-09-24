@@ -108,6 +108,15 @@ function Forcast(props) {
                   {Math.round(weather.wind.speed)} Km/h
                 </span>
               </li>
+              <li className="clothing-advice-section">
+                <button
+                  className="clothing-advice-btn"
+                  onClick={props.onGetClothingAdvice}
+                  aria-label="Get clothing recommendations based on current weather"
+                >
+                  Get Clothing Advice
+                </button>
+              </li>
             </div>
           ) : (
             <li>

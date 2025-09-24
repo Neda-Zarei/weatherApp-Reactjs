@@ -197,18 +197,13 @@ class Weather extends React.Component {
                 {/* <span className="slash">/</span>
                 {this.state.temperatureF} &deg;F */}
               </div>
-              <div className="clothing-advice-section">
-                <button
-                  className="clothing-advice-btn"
-                  onClick={this.handleGetClothingAdvice}
-                  aria-label="Get clothing recommendations based on current weather"
-                >
-                  Get Clothing Advice
-                </button>
-              </div>
             </div>
           </div>
-          <Forcast icon={this.state.icon} weather={this.state.main} />
+          <Forcast
+            icon={this.state.icon}
+            weather={this.state.main}
+            onGetClothingAdvice={this.handleGetClothingAdvice}
+          />
           <ClothingRecommendation
             isVisible={this.state.showClothingRecommendation}
             weatherData={{
