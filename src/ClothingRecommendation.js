@@ -1,5 +1,5 @@
 import React from 'react';
-const openaiService = require('./services/openaiService');
+import openaiService from './services/openaiService';
 
 class ClothingRecommendation extends React.Component {
   constructor(props) {

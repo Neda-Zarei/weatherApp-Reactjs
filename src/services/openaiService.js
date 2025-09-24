@@ -1,9 +1,8 @@
-const OpenAI = require('openai');
-const apiKeys = require('../apiKeys');
+import apiKeys from '../apiKeys';
 
 class OpenAIService {
   constructor() {
-    this.client = null;
+    this.apiKey = null;
     this.initialized = false;
     this.cache = new Map();
     this.cacheExpiry = 10 * 60 * 1000; // 10 minutes
@@ -15,11 +14,7 @@ class OpenAIService {
         throw new Error('OpenAI API key not configured. Please set REACT_APP_OPENAI_API_KEY environment variable or update apiKeys.js');
       }
 
-      this.client = new OpenAI({
-        apiKey: apiKeys.openaiApiKey,
-        dangerouslyAllowBrowser: true
-      });
-
+      this.apiKey = apiKeys.openaiApiKey;
       this.initialized = true;
       return true;
     } catch (error) {
@@ -38,12 +33,24 @@ class OpenAIService {
     }
 
     try {
-      const completion = await this.client.chat.completions.create({
-        messages: [{ role: "user", content: "Hello! Please respond with 'Connection successful'" }],
-        model: "gpt-3.5-turbo",
-        max_tokens: 10
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify({
+          messages: [{ role: "user", content: "Hello! Please respond with 'Connection successful'" }],
+          model: "gpt-3.5-turbo",
+          max_tokens: 10
+        })
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const completion = await response.json();
       return completion.choices[0]?.message?.content || 'Connection test completed';
     } catch (error) {
       console.error('OpenAI API test failed:', error);
@@ -218,12 +225,24 @@ Be specific about clothing types (e.g., "cotton t-shirt" not just "shirt"). Cons
       );
 
       // Create API call promise
-      const apiPromise = this.client.chat.completions.create({
-        messages: [{ role: "user", content: prompt }],
-        model: "gpt-3.5-turbo",
-        max_tokens: 300,
-        temperature: 0.7,
-        timeout: requestTimeout - 1000 // OpenAI client timeout slightly less than our timeout
+      const apiPromise = fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify({
+          messages: [{ role: "user", content: prompt }],
+          model: "gpt-3.5-turbo",
+          max_tokens: 300,
+          temperature: 0.7
+        })
+      }).then(async (response) => {
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        return response.json();
       });
 
       // Race between timeout and API call
@@ -393,4 +412,4 @@ Be specific about clothing types (e.g., "cotton t-shirt" not just "shirt"). Cons
   }
 }
 
-module.exports = new OpenAIService();
+export default new OpenAIService();
