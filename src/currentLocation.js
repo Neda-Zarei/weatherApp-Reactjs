@@ -58,6 +58,11 @@ class Weather extends React.Component {
     errorMsg: undefined,
   };
 
+  handleGetClothingAdvice = () => {
+    // Placeholder for clothing advice functionality
+    console.log('Get Clothing Advice clicked');
+  };
+
   componentDidMount() {
     if (navigator.geolocation) {
       this.getPosition()
@@ -185,6 +190,15 @@ class Weather extends React.Component {
                 </p>
                 {/* <span className="slash">/</span>
                 {this.state.temperatureF} &deg;F */}
+              </div>
+              <div className="clothing-advice-section">
+                <button
+                  className="clothing-advice-btn"
+                  onClick={this.handleGetClothingAdvice}
+                  aria-label="Get clothing recommendations based on current weather"
+                >
+                  Get Clothing Advice
+                </button>
               </div>
             </div>
           </div>
