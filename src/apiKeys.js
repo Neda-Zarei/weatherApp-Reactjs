@@ -5,4 +5,5 @@ const apiKeys = {
   base: "https://api.openweathermap.org/data/2.5/",
   openaiApiKey: process.env.REACT_APP_OPENAI_API_KEY || "your-openai-api-key-here",
 };
+
 export default apiKeys;
